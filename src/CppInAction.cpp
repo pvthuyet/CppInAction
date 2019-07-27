@@ -8,17 +8,16 @@
 
 #include <iostream>
 #include "listing_6.1.h"
+#include "listing_6.2.h"
+#include "listing_6.3.h"
+
 using namespace std;
 
+
 int main() {
-	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
-	LISTING_6_1::threadsafe_stack<int> stk;
-	//stk.push(1);
-	//cout << *stk.pop() << endl;
-	try {
-		stk.pop();
-	} catch (const exception& e) {
-		cout << e.what();
-	}
+	//LISTING_6_1::test();
+	//LISTING_6_2::test();
+	LISTING_6_3::test();
+
 	return 0;
 }

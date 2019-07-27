@@ -12,8 +12,12 @@
 #include <stack>
 #include <mutex>
 #include <memory>
+#include <future>
+#include <chrono>
+#include <thread>
 
 namespace LISTING_6_1 {
+	std::mutex gMutLog;
 
 	struct empty_stack : std::exception {
 		const char* what() const throw() { return "Empty stack"; }
@@ -60,6 +64,78 @@ namespace LISTING_6_1 {
 		}
 
 	};
+
+	void test () {
+		LISTING_6_1::threadsafe_stack<int> stk;
+		auto pPush = std::async(std::launch::async, [&stk](){
+			const int n = 50;
+			for (int i = 0; i < n; i++) {
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+				stk.push(i);
+				{
+					std::lock_guard<std::mutex> lock(gMutLog);
+					std::cout << std::this_thread::get_id() << " Push " << i << " into stack\n" << std::flush;
+				}
+			}
+		});
+
+		auto pPop1 = std::async(std::launch::async, [&stk](){
+			const int n = 10;
+			for (int i = 0; i < n; i++) {
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				try {
+					auto value = stk.pop();
+					{
+						std::lock_guard<std::mutex> lock(gMutLog);
+						std::cout << std::this_thread::get_id() << " pop " << *value << " out stack\n"<< std::flush;
+					}
+				} catch (const std::exception& e) {
+					std::lock_guard<std::mutex> lock(gMutLog);
+					std::cout << std::this_thread::get_id() << " " << e.what() << std::endl << std::flush;
+				}
+			}
+		});
+
+		auto pPop2 = std::async(std::launch::async, [&stk](){
+			const int n = 10;
+			for (int i = 0; i < n; i++) {
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				try {
+					auto value = stk.pop();
+					{
+						std::lock_guard<std::mutex> lock(gMutLog);
+						std::cout << std::this_thread::get_id() << " pop " << *value << " out stack\n"<< std::flush;
+					}
+				} catch (const std::exception& e) {
+					std::lock_guard<std::mutex> lock(gMutLog);
+					std::cout << std::this_thread::get_id() << " " << e.what() << std::endl<< std::flush;
+				}
+			}
+		});
+
+		auto pPop3 = std::async(std::launch::async, [&stk](){
+			const int n = 10;
+			for (int i = 0; i < n; i++) {
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				try {
+					auto value = stk.pop();
+					{
+						std::lock_guard<std::mutex> lock(gMutLog);
+						std::cout << std::this_thread::get_id() << " pop " << *value << " out stack\n"<< std::flush;
+					}
+				} catch (const std::exception& e) {
+					std::lock_guard<std::mutex> lock(gMutLog);
+					std::cout << std::this_thread::get_id() << " " << e.what() << std::endl<< std::flush;
+				}
+			}
+		});
+
+		pPush.wait();
+		pPop1.wait();
+		pPop2.wait();
+		pPop3.wait();
+
+	}
 }
 
 
