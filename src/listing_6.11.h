@@ -20,7 +20,7 @@ namespace LISTING_6_11 {
 	class threadsafe_lookup_table {
 	private:
 		class bucket_type {
-		private:
+		public:
 			using bucket_value = std::pair<Key, Value>;
 			using bucket_data = std::list<bucket_value>;
 			using bucket_iterator = typename std::list<bucket_value>::iterator;
@@ -86,6 +86,19 @@ namespace LISTING_6_11 {
 		void remove_mapping(Key const& key) {
 			get_bucket(key).remove_mapping(key);
 		}
+		std::map<Key, Value> get_map() {
+			std::vector<boost::unique_lock<boost::shared_mutex> > locks;
+			for (unsigned i = 0; i < buckets.size(); ++i) {
+				locks.emplace_back(boost::unique_lock<boost::shared_mutex> (buckets[i]->mutex));
+			}
+			std::map<Key, Value> res;
+			for(unsigned i = 0; i < buckets.size(); ++i) {
+				for(auto it = std::begin(buckets[i]->data); it != std::end(buckets[i]->data); ++it) {
+					res.insert(*it);
+				}
+			}
+			return res;
+		}
 	};
 	void test() {
 		std::mutex gMutLog;
@@ -110,6 +123,10 @@ namespace LISTING_6_11 {
 		t1.join();
 		t2.join();
 		t3.join();
+		auto res = tbtest.get_map();
+		for(auto& item: res) {
+			std::cout << "(" << item.first << "," << item.second << ")" << std::endl << std::flush;
+		}
 	}
 }
 
