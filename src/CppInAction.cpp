@@ -17,6 +17,7 @@
 #include "listing_6.11.h"
 #include "listing_6.13.h"
 #include "listing_7.1.h"
+#include "listing_7.2.h"
 
 #include <cassert>
 #include <vector>
