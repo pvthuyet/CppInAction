@@ -7,6 +7,8 @@
 //============================================================================
 
 #include <iostream>
+#include "listing_5.4.h"
+#include "listing_5.5.h"
 #include "listing_6.1.h"
 #include "listing_6.2.h"
 #include "listing_6.3.h"
@@ -25,6 +27,8 @@ using namespace std;
 
 
 int main() {
+	//LISTING_5_4::test();
+	LISTING_5_5::test();
 	//LISTING_6_1::test();
 	//LISTING_6_2::test();
 	//LISTING_6_3::test();
@@ -33,7 +37,7 @@ int main() {
 	//LISTING_6_6::test();
 	//LISTING_6_7::test();
 	//LISTING_6_11::test();
-	LISTING_6_13::test();
+	//LISTING_6_13::test();
 	//LISTING_7_1::test();
 	std::cout << "End!";
 
