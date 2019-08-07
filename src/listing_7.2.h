@@ -23,6 +23,12 @@ namespace LISTING_7_2 {
 			new_val->next = head.load();
 			while(!head.compare_exchange_weak(new_val->next, new_val));
 		}
+
+		void pop(T& result) {
+			node* old_head = head.load();
+			while(!head.compare_exchange_weak(old_head, old_head->next));
+			result = old_head->data;
+		}
 	};
 }
 

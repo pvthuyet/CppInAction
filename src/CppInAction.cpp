@@ -5,7 +5,9 @@
 // Copyright   : Your copyright notice
 // Description : Hello World in C++, Ansi-style
 //============================================================================
-
+#ifndef _DEBUG
+#define _DEBUG
+#endif
 #include <iostream>
 #include "listing_5.4.h"
 #include "listing_5.5.h"
@@ -29,7 +31,7 @@ using namespace std;
 
 int main() {
 	//LISTING_5_4::test();
-	LISTING_5_5::test();
+	//LISTING_5_5::test();
 	//LISTING_6_1::test();
 	//LISTING_6_2::test();
 	//LISTING_6_3::test();
