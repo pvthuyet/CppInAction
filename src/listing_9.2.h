@@ -83,9 +83,9 @@ namespace LISTING_9_2 {
 			done = true;
 		}
 
-		template<typename FunctionType>
-		std::future<typename std::result_of<FunctionType()>::type> submit(FunctionType f) {
-			typedef typename std::result_of<FunctionType()>::type result_type;
+		template<typename F>
+		std::future<typename std::result_of<F()>::type> submit(F f) {
+			typedef typename std::result_of<F()>::type result_type;
 			std::packaged_task<result_type()> task(std::move(f));
 			std::future<result_type> res(task.get_future());
 			work_queue.push(std::move(task));
@@ -95,8 +95,8 @@ namespace LISTING_9_2 {
 
 	template<typename Iterator, typename T>
 	struct accumulate_block {
-		void operator()(Iterator first, Iterator last, T& result) {
-			result = std::accumulate(first, last, result);
+		T operator()(Iterator first, Iterator last) {
+			return std::accumulate(first, last, T());
 		}
 	};
 
@@ -112,17 +112,15 @@ namespace LISTING_9_2 {
 
 		Iterator block_start = first;
 		for(unsigned long i = 0; i < (num_blocks - 1); ++i) {
-			T val;
+			//T val;
 			Iterator block_end = block_start;
 			std::advance(block_end, block_size);
-			auto f = [=](){
-					accumulate_block<Iterator, T>()(block_start, block_end, val);
-			};
-			futures[i] = pool.submit(f);
+			futures[i] = pool.submit([=]{
+				return accumulate_block<Iterator,T>()(block_start, block_end);
+			});
 			block_start = block_end;
 		}
-		T lstVal;
-		T last_result = accumulate_block<Iterator,T>()(block_start, last, lstVal);
+		T last_result = accumulate_block<Iterator, T>()(block_start, last);
 		T result = init;
 		for(unsigned long i = 0; i < (num_blocks-1);++i) {
 			result += futures[i].get();
@@ -133,6 +131,10 @@ namespace LISTING_9_2 {
 	void test() {
 		std::vector<int> v(100);
 		std::iota(std::begin(v), std::end(v), 1);
+		auto print = [](const int& n) { std::cout << " " << n; };
+		std::for_each(v.begin(), v.end(), print);
+		std::cout << '\n';
+
 		int init = 0;
 		int result = parallel_accumulate<std::vector<int>::iterator, int>(std::begin(v), std::end(v), init);
 		std::cout << "parallel accumulate: " << result << std::endl << std::flush;
