@@ -18,12 +18,13 @@
 #include "listing_6.5.h"
 #include "listing_6.6.h"
 #include "listing_6.7.h"
-#include "listing_6.11.h"
+//#include "listing_6.11.h"
 #include "listing_6.13.h"
 #include "listing_7.1.h"
 #include "listing_7.2.h"
 #include "listing_9.1.h"
-#include "listing_9.2.h"
+#include "listing_9.1.1.h"
+//#include "listing_9.2.h"
 
 #include <cassert>
 #include <vector>
@@ -44,7 +45,8 @@ int main() {
 	//LISTING_6_11::test();
 	//LISTING_6_13::test();
 	//LISTING_7_1::test();
-	LISTING_9_1::test();
+	//LISTING_9_1::test();
+	LISTING_9_1_1::test();
 	std::cout << "End!";
 
 	return 0;
