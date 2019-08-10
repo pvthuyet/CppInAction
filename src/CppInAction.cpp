@@ -1,3 +1,4 @@
+
 //============================================================================
 // Name        : CppInAction.cpp
 // Author      : thuyet pham
@@ -9,6 +10,7 @@
 #define _DEBUG
 #endif
 #include <iostream>
+#include "logger.h"
 #include "listing_5.4.h"
 #include "listing_5.5.h"
 #include "listing_6.1.h"
@@ -23,14 +25,15 @@
 #include "listing_7.1.h"
 #include "listing_7.2.h"
 #include "listing_9.1.h"
-#include "listing_9.1.1.h"
-//#include "listing_9.2.h"
+#include "listing_9.2.h"
+#include "listing_9.3.h"
 
 #include <cassert>
 #include <vector>
 
 using namespace std;
 
+tet::logger gLogger;
 int main() {
 	//LISTING_5_4::test();
 	//LISTING_5_5::test();
@@ -45,7 +48,7 @@ int main() {
 	//LISTING_6_13::test();
 	//LISTING_7_1::test();
 	//LISTING_9_1::test();
-	LISTING_9_1_1::test();
+	LISTING_9_3::test();
 	std::cout << "End!";
 
 	return 0;

@@ -1,5 +1,5 @@
 /*
- * listing_9.2.h
+ * listing_9.1.h
  *
  *  Created on: Aug 8, 2019
  *      Author: thuye
@@ -7,57 +7,27 @@
 
 #ifndef LISTING_9_2_H_
 #define LISTING_9_2_H_
-#include "listing_6.7.h"
-#include <future>
+#include <atomic>
 #include <functional>
-#include <memory>
-#include <iterator>
-#include <numeric>
 #include <vector>
-#include <type_traits>
-
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <future>
+#include "listing_6.7.h"
+#include "listing_8.3.h"
+#include <system_error>
 namespace LISTING_9_2 {
-	class function_wrapper {
-	private:
-		struct impl_base {
-			virtual void call() = 0;
-			virtual ~impl_base() {}
-		};
-		template<typename F>
-		struct impl_type: impl_base {
-			F f;
-			impl_type(F&& f_): f(std::move(f_)) {}
-			impl_type(F& f_) = delete;
-			void call() { f(); }
-		};
-		std::unique_ptr<impl_base> impl;
-
-	public:
-		template<typename F>
-		function_wrapper(F&& f) : impl(std::make_unique<impl_type<F> >(std::move(f)))
-		{}
-		void operator()() { impl->call(); }
-		function_wrapper() = default;
-		function_wrapper(function_wrapper&& other): impl(std::move(other.impl))
-		{}
-		function_wrapper& operator=(function_wrapper&& other) {
-			impl = std::move(other.impl);
-			return *this;
-		}
-		function_wrapper(const function_wrapper&) = delete;
-		function_wrapper(function_wrapper&) = delete;
-		function_wrapper& operator=(const function_wrapper&) = delete;
-	};
-
 	class thread_pool {
 	private:
-		LISTING_6_7::threadsafe_queue<function_wrapper> work_queue;
-		std::vector<std::thread> threads;
 		std::atomic_bool done;
+		LISTING_6_7::threadsafe_queue<std::function<void()> > work_queue;
+		std::vector<std::thread> threads;
+		LISTING_8_3::join_threads joiner;
 
 		void worker_thread() {
-			while(!done) {
-				function_wrapper task;
+			while (!done) {
+				std::function<void()> task;
 				if(work_queue.try_pop(task)) {
 					task();
 				} else {
@@ -67,10 +37,9 @@ namespace LISTING_9_2 {
 		}
 
 	public:
-		thread_pool() : done(false) {
-			unsigned const thread_count = std::thread::hardware_concurrency();
+		thread_pool(unsigned numThread = std::thread::hardware_concurrency()) : done(false), joiner(threads) {
 			try {
-				for(unsigned i = 0; i < thread_count; ++i) {
+				for(unsigned i = 0; i < numThread; ++i) {
 					threads.emplace_back(std::thread(&thread_pool::worker_thread, this));
 				}
 			}
@@ -83,61 +52,52 @@ namespace LISTING_9_2 {
 			done = true;
 		}
 
-		template<typename F>
-		std::future<typename std::result_of<F()>::type> submit(F f) {
-			typedef typename std::result_of<F()>::type result_type;
-			std::packaged_task<result_type()> task(std::move(f));
-			std::future<result_type> res(task.get_future());
-			work_queue.push(std::move(task));
+		template<class Fn, class... Args>
+		auto submit(Fn&& f, Args&&... args)
+			-> std::future<std::result_of_t<Fn(Args...)> >
+		{
+			using return_type = std::result_of_t<Fn(Args...)>;
+			auto task = std::make_shared<std::packaged_task<return_type()> >
+			(std::bind(std::forward<Fn>(f), std::forward<Args>(args)...)
+			);
+			std::future<return_type> res = task->get_future();
+
+			work_queue.push([task](){
+				(*task)();
+			});
 			return res;
 		}
 	};
-
-	template<typename Iterator, typename T>
-	struct accumulate_block {
-		T operator()(Iterator first, Iterator last) {
-			return std::accumulate(first, last, T());
-		}
-	};
-
-	template<typename Iterator, typename T>
-	T parallel_accumulate(Iterator first, Iterator last, T init) {
-		unsigned long const length = std::distance(first, last);
-		if (!length)
-			return init;
-		unsigned long const block_size = 25;
-		unsigned long const num_blocks = (length + block_size -1) / block_size;
-		std::vector<std::future<T> > futures(num_blocks - 1);
-		thread_pool pool;
-
-		Iterator block_start = first;
-		for(unsigned long i = 0; i < (num_blocks - 1); ++i) {
-			//T val;
-			Iterator block_end = block_start;
-			std::advance(block_end, block_size);
-			futures[i] = pool.submit([=]{
-				return accumulate_block<Iterator,T>()(block_start, block_end);
-			});
-			block_start = block_end;
-		}
-		T last_result = accumulate_block<Iterator, T>()(block_start, last);
-		T result = init;
-		for(unsigned long i = 0; i < (num_blocks-1);++i) {
-			result += futures[i].get();
-		}
-		result += last_result;
-		return result;
-	}
 	void test() {
-		std::vector<int> v(100);
-		std::iota(std::begin(v), std::end(v), 1);
-		auto print = [](const int& n) { std::cout << " " << n; };
-		std::for_each(v.begin(), v.end(), print);
-		std::cout << '\n';
-
-		int init = 0;
-		int result = parallel_accumulate<std::vector<int>::iterator, int>(std::begin(v), std::end(v), init);
-		std::cout << "parallel accumulate: " << result << std::endl << std::flush;
+		std::mutex gMutLog;
+		std::atomic_int count(30);
+		auto log = [&gMutLog, &count](int a) -> int {
+			for(;;) {
+				if (count < 1)
+					return a;
+				count += a;
+				int cur = count;
+				{
+					std::lock_guard<std::mutex> lock(gMutLog);
+					std::cout << "Thread " << std::this_thread::get_id() << " plus " << a << " timeout = " << cur << std::endl << std::flush;
+				}
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+			return a;
+		};
+		thread_pool tPool;
+		auto f1 = tPool.submit(log, 1);
+		auto f2 = tPool.submit(log, -2);
+		auto f3= tPool.submit(log, 3);
+		auto f4 = tPool.submit(log, -4);
+		auto r1 = f1.get();
+		auto r2 = f2.get();
+		auto r3 = f3.get();
+		auto r4 = f4.get();
+		std::cout << "f1: " << r1 << std::endl << std::flush;
+		std::cout << "f2: " << r2 << std::endl << std::flush;
+		std::cout << "f3: " << r3 << std::endl << std::flush;
+		std::cout << "f4: " << r4 << std::endl << std::flush;
 	}
 }
 
