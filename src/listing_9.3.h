@@ -36,7 +36,7 @@ namespace LISTING_9_3 {
 		if (!length)
 			return init;
 		unsigned long const block_size = 25;
-		unsigned long const num_threads = 16;
+		unsigned long const num_threads = std::thread::hardware_concurrency();
 		unsigned long const num_blocks = (length + block_size -1) / (block_size );
 		std::vector<std::future<T> > futures(num_blocks - 1);
 		LISTING_9_2::thread_pool pool(num_threads);
@@ -58,17 +58,47 @@ namespace LISTING_9_3 {
 		return result;
 	}
 	void test() {
-		constexpr int N = 10'000;
-		std::vector<int> v(N);
-		std::iota(std::begin(v), std::end(v), 1);
+		char c = 'b';
+		while (c != 'e') {
+			std::cout << "Thread Pool - Choose running Algorithm (h for help): ";
+			std::cin >> c;
+			switch (c) {
+			case 'e':
+				break;
+			case 'h':
+				std::cout << std::endl;
+				std::cout << "'e' - Exit" << std::endl;
+				std::cout << "'a' - accumulate" << std::endl;
+				std::cout << "'q' - quick sort" << std::endl;
+				std::cout << "'h' - help" << std::endl;
+				break;
+			case 'a':
+				{
+					constexpr int N = 1'000;
+					int sz;
+					std::cout << std::endl;
+					std::cout << "Enter number of elements (default " << N << " ): ";
+					std::cin >> sz;
+					if (sz < 2 ) {
+						sz = N;
+					}
+					std::vector<int> v(sz);
+					std::iota(std::begin(v), std::end(v), 1);
+					std::cout << std::endl;
+					int init = 0;
+					int result = parallel_accumulate<std::vector<int>::iterator, int>(std::begin(v), std::end(v), init);
+					std::cout << "parallel accumulate: "
+							<< v[0] << " + "
+							<< v[1] << " + ... + "
+							<< v[sz-1] << " = "
+							<< result << std::endl << std::flush;
+				}
+			break;
 
-		int init = 0;
-		int result = parallel_accumulate<std::vector<int>::iterator, int>(std::begin(v), std::end(v), init);
-		std::cout << "parallel accumulate: "
-				<< v[0] << " + "
-				<< v[1] << " + ... + "
-				<< v[N-1] << " = "
-				<< result << std::endl << std::flush;
+			default:
+				break;
+			}
+		}
 	}
 }
 
