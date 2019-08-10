@@ -31,7 +31,6 @@
 
 using namespace std;
 
-
 int main() {
 	//LISTING_5_4::test();
 	//LISTING_5_5::test();
