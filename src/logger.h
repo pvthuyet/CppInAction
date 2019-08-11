@@ -9,12 +9,16 @@
 #define LOGGER_H_
 #include <mutex>
 #include <list>
+#include <thread>
+
 namespace tet {
 	class logger {
 	private:
 		std::mutex m_mut;
 	public:
 		logger();
+		void debug(int a);
+		void debug(std::thread::id a);
 		void debug(int a, int b);
 		void debug(std::string str);
 		void debug(std::string str, std::list<int> input);

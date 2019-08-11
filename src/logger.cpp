@@ -22,6 +22,16 @@ namespace tet {
 		// TODO Auto-generated destructor stub
 	}
 
+	void logger::debug(int a) {
+		std::lock_guard<std::mutex> lk(m_mut);
+		std::cout << a << std::endl;
+	}
+
+	void logger::debug(std::thread::id a) {
+		std::lock_guard<std::mutex> lk(m_mut);
+		std::cout << a << std::endl;
+	}
+
 	void logger::debug(int a, int b) {
 		std::lock_guard<std::mutex> lk(m_mut);
 		std::cout << "Thread " << std::this_thread::get_id()<< ": ";

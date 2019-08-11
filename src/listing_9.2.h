@@ -17,6 +17,10 @@
 #include "listing_6.7.h"
 #include "listing_8.3.h"
 #include <system_error>
+#include <sstream>
+
+extern tet::logger gLogger;
+
 namespace LISTING_9_2 {
 	class thread_pool {
 	private:
@@ -24,8 +28,14 @@ namespace LISTING_9_2 {
 		LISTING_6_7::threadsafe_queue<std::function<void()> > work_queue;
 		std::vector<std::thread> threads;
 		LISTING_8_3::join_threads joiner;
+		static thread_local std::string xxx;
 
 		void worker_thread() {
+			std::ostringstream stringStream;
+			stringStream << "Thread " << std::this_thread::get_id() << " starting..."<< std::endl;
+			xxx = stringStream.str();
+			gLogger.debug(xxx);
+
 			while (!done) {
 				std::function<void()> task;
 				if(work_queue.try_pop(task)) {
@@ -77,6 +87,8 @@ namespace LISTING_9_2 {
 			return res;
 		}
 	};
+	thread_local std::string thread_pool::xxx = "";
+
 	void test() {
 		std::mutex gMutLog;
 		std::atomic_int count(30);
