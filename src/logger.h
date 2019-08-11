@@ -8,6 +8,7 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 #include <mutex>
+#include <list>
 namespace tet {
 	class logger {
 	private:
@@ -15,6 +16,8 @@ namespace tet {
 	public:
 		logger();
 		void debug(int a, int b);
+		void debug(std::string str);
+		void debug(std::string str, std::list<int> input);
 		virtual ~logger();
 	};
 }

@@ -52,6 +52,15 @@ namespace LISTING_9_2 {
 			done = true;
 		}
 
+		void run_pending_task() {
+			std::function<void()> task;
+			if(work_queue.try_pop(task)) {
+				task();
+			} else {
+				std::this_thread::yield();
+			}
+		}
+
 		template<class Fn, class... Args>
 		auto submit(Fn&& f, Args&&... args)
 			-> std::future<std::result_of_t<Fn(Args...)> >
