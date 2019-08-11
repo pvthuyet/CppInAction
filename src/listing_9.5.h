@@ -15,6 +15,7 @@
 #include <iterator>
 #include <functional>
 #include <sstream>
+#include "Utility.h"
 
 extern tet::logger gLogger;
 
@@ -70,19 +71,6 @@ namespace LISTING_9_5 {
 		return a.do_sort(input);
 	}
 
-	std::list<int> generate(int num = 1000) {
-	    std::random_device rd;
-	    std::list<int> hist;
-	    std::uniform_int_distribution<int> dist(-100, 100);
-	    for (int n = 0; n < num; ++n) {
-	        hist.emplace_front(dist(rd)); // note: demo only: the performance of many
-	                          // implementations of random_device degrades sharply
-	                          // once the entropy pool is exhausted. For practical use
-	                          // random_device is generally only used to seed
-	                          // a PRNG such as mt19937
-	    }
-	    return hist;
-	}
 	void test() {
 		char c = 'b';
 		while (c != 'e') {
@@ -108,7 +96,7 @@ namespace LISTING_9_5 {
 					if (sz < 2 ) {
 						sz = N;
 					}
-					std::list<int> v(generate(sz));
+					std::list<int> v = tet::Utility::random(sz, -100, 100);
 
 					std::list<int> result  = parallel_quick_sort<int>(v);
 					std::cout << "Quick sort result: ";

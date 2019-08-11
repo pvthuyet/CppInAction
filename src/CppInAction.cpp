@@ -31,11 +31,14 @@
 
 #include <cassert>
 #include <vector>
+#include "Utility.h"
 
 using namespace std;
 tet::logger gLogger;
 
 int main() {
+	int r = tet::Utility::rand(0, 10);
+	std::cout << r << std:: endl;
 	//LISTING_5_4::test();
 	//LISTING_5_5::test();
 	//LISTING_6_1::test();
@@ -50,7 +53,7 @@ int main() {
 	//LISTING_7_1::test();
 	//LISTING_9_1::test();
 	//LISTING_9_3::test();
-	LISTING_9_5::test();
+	//LISTING_9_5::test();
 	std::cout << "End!";
 
 	return 0;
