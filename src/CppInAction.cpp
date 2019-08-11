@@ -51,9 +51,9 @@ int main() {
 	//LISTING_6_13::test();
 	//LISTING_7_1::test();
 	//LISTING_9_1::test();
-	LISTING_9_3::test();
+	//LISTING_9_3::test();
 	//LISTING_9_5::test();
-	//LISTING_9_6::test();
+	LISTING_9_6::test();
 	std::cout << "End!";
 
 	return 0;

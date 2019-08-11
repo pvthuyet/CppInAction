@@ -20,13 +20,11 @@
 
 extern tet::logger gLogger;
 namespace LISTING_9_6 {
-
+	// define new data type
+	using local_queue_type = std::queue<std::function<void()> >;
 
 	class thread_pool {
 	private:
-		// define new data type
-		using local_queue_type = std::queue<std::function<void()> >;
-
 		// data members
 		std::atomic_bool done;
 		LISTING_6_7::threadsafe_queue<std::function<void()> > pool_work_queue;
@@ -38,7 +36,12 @@ namespace LISTING_9_6 {
 
 		// private method.
 		void worker_thread() {
-			local_work_queue.reset(new local_queue_type);
+			std::ostringstream os;
+			os << "Thread " << std::this_thread::get_id() << " Initialize...: \n";
+			gLogger.debug(os.str());
+
+			local_work_queue.reset(new local_queue_type());
+
 			while(!done) {
 				run_pending_task();
 			}
@@ -62,16 +65,21 @@ namespace LISTING_9_6 {
 		}
 
 		void run_pending_task() {
+			std::ostringstream os;
+			os << "Thread " << std::this_thread::get_id();
 			std::function<void()> task;
 			if(local_work_queue && !local_work_queue->empty()) {
+				gLogger.debug(os.str() + " POP local_work_queue\n");
 				task = std::move(local_work_queue->front());
 				local_work_queue->pop();
 				task();
 			}
 			else if(pool_work_queue.try_pop(task)) {
+				gLogger.debug(os.str() + " POP pool_work_queue\n");
 				task();
 			} else {
-				std::this_thread::yield();
+				gLogger.debug(os.str() + " sleeping...\n");
+				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}
 		}
 
@@ -85,10 +93,17 @@ namespace LISTING_9_6 {
 			);
 			std::future<return_type> res = task->get_future();
 			if(local_work_queue) {
+				std::ostringstream os;
+				os << "Thread " << std::this_thread::get_id() << " push local_work_queue...: \n";
+				gLogger.debug(os.str());
 				local_work_queue->push([task](){
 					(*task)();
 				});
 			} else {
+				std::ostringstream os;
+				os << "Thread " << std::this_thread::get_id() << " push pool_work_queue...: \n";
+				gLogger.debug(os.str());
+
 				pool_work_queue.push([task](){
 					(*task)();
 				});
@@ -99,7 +114,7 @@ namespace LISTING_9_6 {
 	};
 
 	// Must initialize for thread_local variable.
-	thread_local std::unique_ptr<thread_pool::local_queue_type> thread_pool::local_work_queue(new thread_pool::local_queue_type);
+	thread_local std::unique_ptr<local_queue_type> thread_pool::local_work_queue = nullptr;
 
 	template<typename T>
 	struct sorter {
@@ -167,10 +182,10 @@ namespace LISTING_9_6 {
 		if (!length)
 			return init;
 		unsigned long const block_size = 25;
-		unsigned long const num_threads = std::thread::hardware_concurrency();
+		unsigned long const num_threads = 2;//std::thread::hardware_concurrency();
 		unsigned long const num_blocks = (length + block_size -1) / (block_size );
 		std::vector<std::future<T> > futures(num_blocks - 1);
-		LISTING_9_2::thread_pool pool(num_threads);
+		LISTING_9_6::thread_pool pool(num_threads);
 
 		Iterator block_start = first;
 		for(unsigned long i = 0; i < (num_blocks - 1); ++i) {
@@ -193,8 +208,7 @@ namespace LISTING_9_6 {
 		char c = 'b';
 		while (c != 'e') {
 			std::cout << "Thread Pool - Choose running Algorithm (h for help): ";
-			//std::cin >> c;
-			c = 'a';
+			std::cin >> c;
 			switch (c) {
 			case 'e':
 				break;
@@ -230,8 +244,7 @@ namespace LISTING_9_6 {
 					int sz;
 					std::cout << std::endl;
 					std::cout << "Enter number of elements (default " << N << " ): ";
-					//std::cin >> sz;
-					sz = 1000;
+					std::cin >> sz;
 					if (sz < 2 ) {
 						sz = N;
 					}
@@ -246,7 +259,6 @@ namespace LISTING_9_6 {
 							<< v[sz-1] << " = "
 							<< result << std::endl << std::flush;
 				}
-				return;
 
 			default:
 				break;
