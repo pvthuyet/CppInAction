@@ -30,7 +30,9 @@ public:
 	function_wrapper();
 	template<class F>
 	function_wrapper(F&& f) :
-		impl(std::make_unique<F>(std::forward<F>(f))) {}
+		impl(std::make_unique<impl_type<F> >(std::forward<F>(f)))
+		{
+		}
 
 	function_wrapper(function_wrapper&& other);
 	function_wrapper& operator=(function_wrapper&& other);

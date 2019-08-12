@@ -8,10 +8,11 @@
 #ifndef LISTING_9_7_H_
 #define LISTING_9_7_H_
 #include "include.h"
+#include "functionwrapper.h"
 namespace LISTING_9_7 {
 	class work_stealing_queue {
 	private:
-		using data_type = std::function<void()>;
+		using data_type = tet::function_wrapper;
 		std::deque<data_type> the_queue;
 		mutable std::mutex the_mutex;
 
