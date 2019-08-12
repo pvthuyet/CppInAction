@@ -29,6 +29,7 @@
 #include "listing_9.3.h"
 #include "listing_9.5.h"
 #include "listing_9.6.h"
+#include "listing_9.7.h"
 
 #include <cassert>
 #include <vector>
@@ -53,7 +54,7 @@ int main() {
 	//LISTING_9_1::test();
 	//LISTING_9_3::test();
 	//LISTING_9_5::test();
-	LISTING_9_6::test();
+	//LISTING_9_6::test();
 	std::cout << "End!";
 
 	return 0;
