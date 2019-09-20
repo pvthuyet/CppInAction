@@ -31,6 +31,7 @@
 #include "listing_9.6.h"
 #include "listing_9.7.h"
 //#include "listing_9.8.h"
+#include "interruptiablethread.h"
 
 #include <cassert>
 #include <vector>
